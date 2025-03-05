@@ -6,6 +6,7 @@ interface TimeframeSelectorProps {
 }
 
 // Available timeframes
+// Weekly and Monthly timeframes removed to match header component
 const TIMEFRAMES = [
   { value: '1m', label: '1m' },
   { value: '5m', label: '5m' },
@@ -13,9 +14,7 @@ const TIMEFRAMES = [
   { value: '30m', label: '30m' },
   { value: '1h', label: '1h' },
   { value: '4h', label: '4h' },
-  { value: '1D', label: '1D' },
-  { value: '1W', label: '1W' },
-  { value: '1M', label: '1M' },
+  { value: '1D', label: '1D' }
 ];
 
 export const TimeframeSelector: React.FC<TimeframeSelectorProps> = ({

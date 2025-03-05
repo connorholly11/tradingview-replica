@@ -182,7 +182,42 @@ export function formatIndicatorData(times: number[], values: number[]): { time: 
 }
 
 // Helper function to create line series data for indicators
-export function createIndicatorData(data: ChartData[], values: number[]): { time: number, value: number }[] {
+export function createIndicatorData(
+  indicatorType: string,
+  data: ChartData[],
+  settings: Record<string, number>
+): { time: number, value: number }[] | null {
+  if (!data || data.length === 0) {
+    return null;
+  }
+  
+  let values: number[] = [];
+  
+  switch (indicatorType) {
+    case 'sma': {
+      const period = settings.period || 20;
+      values = calculateSMA(data, period);
+      break;
+    }
+    case 'ema': {
+      const period = settings.period || 20;
+      values = calculateEMA(data, period);
+      break;
+    }
+    case 'rsi': {
+      const period = settings.period || 14;
+      values = calculateRSI(data, period);
+      break;
+    }
+    // You can add more indicator types here
+    default:
+      return null;
+  }
+  
+  if (!values || values.length === 0) {
+    return null;
+  }
+  
   const times = data.map(item => item.time);
   return formatIndicatorData(times, values);
 } 

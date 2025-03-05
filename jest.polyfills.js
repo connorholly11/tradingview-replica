@@ -3,7 +3,8 @@
  * These are needed for MSW but not available in Jest's jsdom environment
  */
 
-const { TextEncoder, TextDecoder } = require('util');
+import { TextEncoder, TextDecoder } from 'util';
+import { fetch, Headers, Request, Response } from 'node-fetch';
 
 Object.defineProperties(global, {
   TextEncoder: { value: TextEncoder },
@@ -11,8 +12,6 @@ Object.defineProperties(global, {
 });
 
 // Add fetch polyfill
-const { fetch, Headers, Request, Response } = require('node-fetch');
-
 Object.defineProperties(global, {
   fetch: { value: fetch, writable: true },
   Headers: { value: Headers, writable: true },

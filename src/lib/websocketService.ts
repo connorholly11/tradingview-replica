@@ -19,14 +19,14 @@ const logWS = (type: 'info' | 'error' | 'warn', message: string, data?: unknown)
   
   switch (type) {
     case 'error':
-      console.error(prefix, message, data || '');
+      console.error(prefix, message, data ? JSON.stringify(data) : '');
       break;
     case 'warn':
-      console.warn(prefix, message, data || '');
+      console.warn(prefix, message, data ? JSON.stringify(data) : '');
       break;
     case 'info':
     default:
-      console.log(prefix, message, data || '');
+      console.log(prefix, message, data ? JSON.stringify(data) : '');
       break;
   }
   
@@ -106,7 +106,8 @@ class PolygonWebSocketService {
     
     // Connect to Polygon WebSocket
     try {
-      this.socket = new WebSocket(`wss://socket.polygon.io/crypto`);
+      // Use stocks endpoint instead of crypto for stock symbols
+      this.socket = new WebSocket(`wss://socket.polygon.io/stocks`);
       
       this.socket.onopen = () => {
         logWS('info', 'WebSocket connection opened');
@@ -114,22 +115,17 @@ class PolygonWebSocketService {
         this.reconnectAttempts = 0;
         
         // Send authentication message
-        if (this.socket) {
-          const authMessage = JSON.stringify({ action: 'auth', params: POLYGON_API_KEY });
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+          const authMessage = JSON.stringify({ action: "auth", params: POLYGON_API_KEY });
           logWS('info', 'Sending authentication message');
           this.socket.send(authMessage);
           
           // Subscribe to the symbol's aggregated minute data
-          // Format symbol for crypto as 'X:BTCUSD' - remove any hyphens
-          const formattedSymbol = symbol.includes('-') 
-            ? `X:${symbol.replace('-', '')}`
-            : symbol;
-          
           const subscribeMessage = JSON.stringify({ 
             action: 'subscribe', 
-            params: `AM.${formattedSymbol}` 
+            params: `AM.${symbol}` 
           });
-          logWS('info', `Subscribing to: AM.${formattedSymbol}`);
+          logWS('info', `Subscribing to: AM.${symbol}`);
           this.socket.send(subscribeMessage);
         }
         
@@ -153,16 +149,38 @@ class PolygonWebSocketService {
       };
       
       this.socket.onerror = (error: Event) => {
-        logWS('error', 'WebSocket error:', error);
+        // Create a more detailed error object
+        const errorInfo = {
+          type: 'WebSocket Error',
+          timestamp: new Date().toISOString(),
+          readyState: this.socket?.readyState,
+          event: error // Use the error parameter
+        };
+        
+        logWS('error', 'WebSocket error occurred:', errorInfo);
         
         if (this.onError) {
-          this.onError(error);
+          this.onError(new Error(`WebSocket error: ${JSON.stringify(errorInfo)}`));
         }
+        
+        // Attempt to reconnect
+        this.attemptReconnect();
       };
     } catch (error) {
-      logWS('error', 'Error establishing WebSocket connection:', error);
+      const errorInfo = {
+        type: 'Connection Error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        symbol: this.currentSymbol
+      };
+      
+      logWS('error', 'Error establishing WebSocket connection:', errorInfo);
+      
       if (this.onError) {
-        this.onError(error as Error);
+        // Make sure we're passing a proper Error object
+        const wsError = error instanceof Error 
+          ? error 
+          : new Error(`Failed to establish WebSocket connection for ${this.currentSymbol}`);
+        this.onError(wsError);
       }
     }
   }
@@ -249,21 +267,28 @@ class PolygonWebSocketService {
   }
   
   /**
-   * Attempt to reconnect after connection loss
+   * Attempt to reconnect to the WebSocket
+   * Uses exponential backoff for retry attempts
    */
   private attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      logWS('error', `Maximum reconnect attempts (${this.maxReconnectAttempts}) reached`);
+      logWS('warn', `Maximum reconnection attempts (${this.maxReconnectAttempts}) reached. Giving up.`);
       return;
     }
     
     this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    
+    // Calculate exponential backoff delay
+    const delay = Math.min(
+      this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
+      30000 // Maximum 30 second delay
+    );
     
     logWS('info', `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
     
     setTimeout(() => {
       if (this.currentSymbol) {
+        logWS('info', `Reconnecting to symbol: ${this.currentSymbol}`);
         this.connectToSymbol(this.currentSymbol);
       }
     }, delay);

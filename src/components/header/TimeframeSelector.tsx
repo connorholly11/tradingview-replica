@@ -12,6 +12,7 @@ const logTimeframeSelector = (action: string, details?: Record<string, unknown>)
 
 /**
  * Available timeframes for chart viewing
+ * Removed 1W and 1M as requested by user
  */
 const TIMEFRAMES = [
   { value: '1m', label: '1m' },
@@ -20,9 +21,7 @@ const TIMEFRAMES = [
   { value: '30m', label: '30m' },
   { value: '1h', label: '1h' },
   { value: '4h', label: '4h' },
-  { value: '1D', label: '1D' },
-  { value: '1W', label: '1W' },
-  { value: '1M', label: '1M' }
+  { value: '1D', label: '1D' }
 ];
 
 interface TimeframeSelectorProps {
@@ -38,14 +37,14 @@ const TimeframeSelector = ({ onTimeframeChange, selectedTimeframe = '1D' }: Time
 
   return (
     <div className="relative">
-      <div className="flex space-x-1">
+      <div className="flex space-x-0.5">
         {TIMEFRAMES.map((timeframe) => (
           <button
             key={timeframe.value}
-            className={`px-2 py-1 text-sm rounded ${
+            className={`px-3 py-1 text-xs font-medium rounded-sm transition-colors duration-150 ${
               selectedTimeframe === timeframe.value
-                ? 'bg-blue-500 text-white'
-                : 'bg-[#2A2E39] text-gray-300 hover:bg-[#363A45]'
+                ? 'bg-[#2962FF] text-white'
+                : 'bg-transparent text-gray-300 hover:bg-[#2A2E39] hover:text-white'
             }`}
             onClick={() => handleSelectTimeframe(timeframe.value)}
           >
