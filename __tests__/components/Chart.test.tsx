@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { Chart } from '@/components/chart/Chart';
-import { ChartData } from '@/lib/apiService';
+import { Chart } from '../../src/components/chart/Chart';
+import { ChartData } from '../../src/lib/apiService';
 import { UTCTimestamp } from 'lightweight-charts';
 
 // Import custom matchers from jest-dom

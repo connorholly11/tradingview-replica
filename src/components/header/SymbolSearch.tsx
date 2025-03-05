@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { popularSymbols } from '@/lib/apiService';
 
 /**
  * Logger function for symbol search interactions
@@ -18,6 +17,23 @@ interface SymbolSearchProps {
   initialSymbol?: string;
 }
 
+/**
+ * Define a local list of popular symbols (instead of importing from apiService).
+ * You can adjust or expand this as needed for your app.
+ */
+const POPULAR_SYMBOLS = [
+  'AAPL',
+  'MSFT',
+  'GOOGL',
+  'GOOG',
+  'AMZN',
+  'META',
+  'TSLA',
+  'NVDA',
+  'BTC-USD',
+  'ETH-USD',
+];
+
 const SymbolSearch = ({ onSymbolSelect, initialSymbol = 'AAPL' }: SymbolSearchProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -27,15 +43,15 @@ const SymbolSearch = ({ onSymbolSelect, initialSymbol = 'AAPL' }: SymbolSearchPr
   // Filter symbols as the user types
   useEffect(() => {
     if (searchQuery) {
-      const filtered = popularSymbols.filter((sym: string) => 
+      const filtered = POPULAR_SYMBOLS.filter((sym: string) =>
         sym.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 10); // Limit to 10 results
-      
-      logSymbolSearch('Search Query Updated', { 
-        query: searchQuery, 
-        resultsCount: filtered.length 
+
+      logSymbolSearch('Search Query Updated', {
+        query: searchQuery,
+        resultsCount: filtered.length,
       });
-      
+
       setFilteredSymbols(filtered);
       setIsDropdownOpen(true);
     } else {
@@ -51,7 +67,7 @@ const SymbolSearch = ({ onSymbolSelect, initialSymbol = 'AAPL' }: SymbolSearchPr
         setIsDropdownOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -71,7 +87,11 @@ const SymbolSearch = ({ onSymbolSelect, initialSymbol = 'AAPL' }: SymbolSearchPr
         <div className="bg-[#2A2E39] text-white rounded-md px-3 py-1 flex items-center">
           <span className="font-bold mr-2">{initialSymbol}</span>
           <svg className="w-4 h-4 ml-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
           </svg>
         </div>
         <div className="relative ml-2">
@@ -108,4 +128,4 @@ const SymbolSearch = ({ onSymbolSelect, initialSymbol = 'AAPL' }: SymbolSearchPr
   );
 };
 
-export default SymbolSearch; 
+export default SymbolSearch;

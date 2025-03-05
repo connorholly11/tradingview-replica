@@ -1,4 +1,4 @@
-import polygonWebSocketService from '@/lib/websocketService';
+import { WebSocketService } from '../src/lib/websocketService';
 
 // Define types for event handlers
 interface WebSocketEvent {

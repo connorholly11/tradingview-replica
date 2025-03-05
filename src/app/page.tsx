@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import ChartContainer from '@/components/chart/ChartContainer';
 import Header from '@/components/header/Header';
 import SymbolInfo from '@/components/chart/SymbolInfo';
+import AppTabs from '@/components/layout/AppTabs';
 import { FiSettings, FiMaximize, FiGrid, FiPenTool } from 'react-icons/fi';
 
 interface ChartContainerRef {
@@ -111,6 +112,9 @@ export default function Home() {
         previousClose={symbolData.previousClose}
       />
 
+      {/* Navigation Tabs */}
+      <AppTabs />
+      
       {/* Main Content */}
       <main className="flex flex-1 overflow-hidden">
         {/* Chart Area */}

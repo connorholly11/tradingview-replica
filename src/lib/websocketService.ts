@@ -1,11 +1,14 @@
 'use client';
 
 // Remove unused imports
-// import { UTCTimestamp } from 'lightweight-charts';
-// import { ChartData } from './apiService';
 
-// Polygon API key - should be moved to environment variables in production
-const POLYGON_API_KEY = 'v0hldwUdqQIRWo1J1_3W1nFSUppESO7N';
+// Use the environment variable instead of a separate NEXT_PUBLIC variable:
+const POLYGON_API_KEY = process.env.POLYGON_API_KEY || '';
+
+console.log(`[WebSocket Config] Polygon API Key length: ${POLYGON_API_KEY.length}`);
+if (!POLYGON_API_KEY) {
+  console.error('[WebSocket Config] ERROR: No Polygon API key found in environment variables. WebSocket connections will fail.');
+}
 
 /**
  * Logger function for WebSocket events
@@ -16,7 +19,7 @@ const POLYGON_API_KEY = 'v0hldwUdqQIRWo1J1_3W1nFSUppESO7N';
 const logWS = (type: 'info' | 'error' | 'warn', message: string, data?: unknown) => {
   const timestamp = new Date().toISOString();
   const prefix = `[WebSocket ${timestamp}] ${type.toUpperCase()}:`;
-  
+
   switch (type) {
     case 'error':
       console.error(prefix, message, data ? JSON.stringify(data) : '');
@@ -29,8 +32,6 @@ const logWS = (type: 'info' | 'error' | 'warn', message: string, data?: unknown)
       console.log(prefix, message, data ? JSON.stringify(data) : '');
       break;
   }
-  
-  // In a production app, we might want to also log to a server or service
 };
 
 /**
@@ -67,7 +68,7 @@ class PolygonWebSocketService {
   private reconnectDelay = 1000;
   private currentSymbol: string | null = null;
   private isConnected = false;
-  
+
   // Callback functions
   public onMessage: ((data: {
     t: number;
@@ -77,13 +78,13 @@ class PolygonWebSocketService {
     c: number;
     v: number;
   }) => void) | null = null;
-  
+
   public onConnect: (() => void) | null = null;
   public onDisconnect: (() => void) | null = null;
   public onError: ((error: Error | Event) => void) | null = null;
 
   /**
-   * Initialize WebSocket connection to Polygon
+   * Initialize WebSocket service
    */
   init() {
     logWS('info', 'Initializing WebSocket service');
@@ -99,70 +100,83 @@ class PolygonWebSocketService {
    */
   connectToSymbol(symbol: string) {
     logWS('info', `Connecting to symbol: ${symbol}`);
+
+    // Validate API key before attempting connection
+    if (!POLYGON_API_KEY) {
+      const errorMsg = 'Cannot connect to Polygon WebSocket: Missing API key';
+      logWS('error', errorMsg);
+
+      if (this.onError) {
+        this.onError(new Error(errorMsg));
+      }
+      return;
+    }
+
     // Close existing connection if any
     this.disconnect();
-    
+
     this.currentSymbol = symbol;
-    
-    // Connect to Polygon WebSocket
+
     try {
-      // Use stocks endpoint instead of crypto for stock symbols
+      // Use stocks endpoint for all polygon stock data
       this.socket = new WebSocket(`wss://socket.polygon.io/stocks`);
-      
+
       this.socket.onopen = () => {
         logWS('info', 'WebSocket connection opened');
         this.isConnected = true;
         this.reconnectAttempts = 0;
-        
+
         // Send authentication message
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-          const authMessage = JSON.stringify({ action: "auth", params: POLYGON_API_KEY });
+          const authMessage = JSON.stringify({ action: 'auth', params: POLYGON_API_KEY });
           logWS('info', 'Sending authentication message');
           this.socket.send(authMessage);
-          
+
           // Subscribe to the symbol's aggregated minute data
-          const subscribeMessage = JSON.stringify({ 
-            action: 'subscribe', 
-            params: `AM.${symbol}` 
+          const subscribeMessage = JSON.stringify({
+            action: 'subscribe',
+            params: `AM.${symbol}`,
           });
           logWS('info', `Subscribing to: AM.${symbol}`);
           this.socket.send(subscribeMessage);
         }
-        
+
         if (this.onConnect) {
           this.onConnect();
         }
       };
-      
+
       this.socket.onmessage = (event) => this.handleMessage(event);
-      
+
       this.socket.onclose = (event) => {
-        logWS('info', `WebSocket connection closed, code: ${event.code}, reason: ${event.reason || 'No reason provided'}`);
+        logWS(
+          'info',
+          `WebSocket connection closed, code: ${event.code}, reason: ${event.reason || 'No reason provided'}`
+        );
         this.isConnected = false;
-        
+
         if (this.onDisconnect) {
           this.onDisconnect();
         }
-        
+
         // Try to reconnect
         this.attemptReconnect();
       };
-      
+
       this.socket.onerror = (error: Event) => {
-        // Create a more detailed error object
         const errorInfo = {
           type: 'WebSocket Error',
           timestamp: new Date().toISOString(),
           readyState: this.socket?.readyState,
-          event: error // Use the error parameter
+          event: error,
         };
-        
+
         logWS('error', 'WebSocket error occurred:', errorInfo);
-        
+
         if (this.onError) {
           this.onError(new Error(`WebSocket error: ${JSON.stringify(errorInfo)}`));
         }
-        
+
         // Attempt to reconnect
         this.attemptReconnect();
       };
@@ -170,21 +184,21 @@ class PolygonWebSocketService {
       const errorInfo = {
         type: 'Connection Error',
         message: error instanceof Error ? error.message : 'Unknown error',
-        symbol: this.currentSymbol
+        symbol: this.currentSymbol,
       };
-      
+
       logWS('error', 'Error establishing WebSocket connection:', errorInfo);
-      
+
       if (this.onError) {
-        // Make sure we're passing a proper Error object
-        const wsError = error instanceof Error 
-          ? error 
-          : new Error(`Failed to establish WebSocket connection for ${this.currentSymbol}`);
+        const wsError =
+          error instanceof Error
+            ? error
+            : new Error(`Failed to establish WebSocket connection for ${this.currentSymbol}`);
         this.onError(wsError);
       }
     }
   }
-  
+
   /**
    * Handle incoming WebSocket messages
    * @param event WebSocket message event
@@ -192,48 +206,60 @@ class PolygonWebSocketService {
   private handleMessage(event: MessageEvent) {
     try {
       const data = JSON.parse(event.data);
-      
+
       // Handle authentication success message
       if (data.ev === 'status' && data.status === 'auth_success') {
         logWS('info', 'Successfully authenticated with Polygon WebSocket');
         return;
       }
-      
+
+      // Handle authentication failure
+      if (data.ev === 'status' && data.status === 'auth_failed') {
+        const errorMsg = 'Authentication with Polygon WebSocket failed. Check your API key.';
+        logWS('error', errorMsg, data);
+
+        // Optionally, do not attempt reconnect if we see auth_failed:
+        this.disconnect();
+        return;
+      }
+
       // Log other status messages
       if (data.ev === 'status') {
         logWS('info', `Received status message: ${data.status}`, data);
         return;
       }
-      
+
       // Handle minute aggregates
       if (Array.isArray(data)) {
         logWS('info', `Received data array with ${data.length} items`);
-        
-        data.forEach(msg => {
-          // Type check and cast to PolygonWebSocketMessage
+
+        data.forEach((msg) => {
           if (this.isPolygonAggregateMessage(msg)) {
-            logWS('info', `Processing aggregate message for ${msg.sym || 'unknown symbol'}`, {
-              time: new Date(msg.s).toISOString(),
-              open: msg.o,
-              high: msg.h,
-              low: msg.l,
-              close: msg.c,
-              volume: msg.v
-            });
-            
+            logWS(
+              'info',
+              `Processing aggregate message for ${msg.sym || 'unknown symbol'}`,
+              {
+                time: new Date(msg.s).toISOString(),
+                open: msg.o,
+                high: msg.h,
+                low: msg.l,
+                close: msg.c,
+                volume: msg.v,
+              }
+            );
+
             if (this.onMessage) {
-              // Pass the raw data to the callback
               this.onMessage({
                 t: msg.s, // Start timestamp (milliseconds)
-                o: msg.o, // Open
-                h: msg.h, // High
-                l: msg.l, // Low
-                c: msg.c, // Close
-                v: msg.v  // Volume
+                o: msg.o,
+                h: msg.h,
+                l: msg.l,
+                c: msg.c,
+                v: msg.v,
               });
             }
           } else {
-            logWS('warn', 'Received message does not match expected format', msg);
+            logWS('warn', 'Received message does not match expected AM format', msg);
           }
         });
       }
@@ -241,7 +267,7 @@ class PolygonWebSocketService {
       logWS('error', 'Error parsing WebSocket message:', error);
     }
   }
-  
+
   /**
    * Type guard to check if a message is a Polygon aggregate message
    * @param msg Any message received from WebSocket
@@ -251,21 +277,20 @@ class PolygonWebSocketService {
     if (!msg || typeof msg !== 'object') {
       return false;
     }
-    
-    // Use a type assertion once to allow property checks
+
     const record = msg as Record<string, unknown>;
-    
+
     return (
-      record.ev === 'AM' && 
-      typeof record.o === 'number' && 
-      typeof record.h === 'number' && 
-      typeof record.l === 'number' && 
-      typeof record.c === 'number' && 
-      typeof record.s === 'number' && 
+      record.ev === 'AM' &&
+      typeof record.o === 'number' &&
+      typeof record.h === 'number' &&
+      typeof record.l === 'number' &&
+      typeof record.c === 'number' &&
+      typeof record.s === 'number' &&
       typeof record.v === 'number'
     );
   }
-  
+
   /**
    * Attempt to reconnect to the WebSocket
    * Uses exponential backoff for retry attempts
@@ -275,17 +300,19 @@ class PolygonWebSocketService {
       logWS('warn', `Maximum reconnection attempts (${this.maxReconnectAttempts}) reached. Giving up.`);
       return;
     }
-    
+
     this.reconnectAttempts++;
-    
-    // Calculate exponential backoff delay
+
     const delay = Math.min(
       this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
-      30000 // Maximum 30 second delay
+      30000
     );
-    
-    logWS('info', `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-    
+
+    logWS(
+      'info',
+      `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+    );
+
     setTimeout(() => {
       if (this.currentSymbol) {
         logWS('info', `Reconnecting to symbol: ${this.currentSymbol}`);
@@ -293,23 +320,19 @@ class PolygonWebSocketService {
       }
     }, delay);
   }
-  
+
   /**
    * Disconnect from WebSocket
    */
   disconnect() {
     if (this.socket) {
-      // Unsubscribe from current symbol if connected
       if (this.isConnected && this.currentSymbol) {
-        const formattedSymbol = this.currentSymbol.includes('-') 
-          ? `X:${this.currentSymbol.replace('-', '')}`
-          : this.currentSymbol;
-          
-        const unsubscribeMessage = JSON.stringify({ 
-          action: 'unsubscribe', 
-          params: `AM.${formattedSymbol}` 
+        const formattedSymbol = this.currentSymbol;
+        const unsubscribeMessage = JSON.stringify({
+          action: 'unsubscribe',
+          params: `AM.${formattedSymbol}`,
         });
-        
+
         try {
           logWS('info', `Unsubscribing from: AM.${formattedSymbol}`);
           this.socket.send(unsubscribeMessage);
@@ -317,7 +340,7 @@ class PolygonWebSocketService {
           logWS('error', 'Error unsubscribing from symbol:', error);
         }
       }
-      
+
       logWS('info', 'Closing WebSocket connection');
       this.socket.close();
       this.socket = null;
@@ -325,7 +348,7 @@ class PolygonWebSocketService {
       this.currentSymbol = null;
     }
   }
-  
+
   /**
    * Check if WebSocket is currently connected
    */
@@ -334,7 +357,5 @@ class PolygonWebSocketService {
   }
 }
 
-// Singleton instance
 const polygonWebSocketService = new PolygonWebSocketService();
-
-export default polygonWebSocketService; 
+export default polygonWebSocketService;

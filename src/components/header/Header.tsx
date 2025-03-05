@@ -1,16 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import SymbolSearch from './SymbolSearch';
+import { useRouter } from 'next/navigation';
+import SymbolSearch from './SymbolSearch'; // renaming it or keep as is
 import TimeframeSelector from './TimeframeSelector';
 import ChartTypeSelector from './ChartTypeSelector';
 import ThemeToggle from './ThemeToggle';
 
-/**
- * Logger function for header interactions
- * @param action The action being performed
- * @param details Details about the action
- */
 const logHeader = (action: string, details?: Record<string, unknown>) => {
   const timestamp = new Date().toISOString();
   console.log(`[Header ${timestamp}]`, action, details || '');
@@ -26,7 +22,7 @@ interface HeaderProps {
   toggleDrawingTools: () => void;
 }
 
-const Header = ({
+export default function Header({
   onSymbolChange,
   onTimeframeChange,
   onChartTypeChange,
@@ -34,7 +30,8 @@ const Header = ({
   initialTimeframe = '1D',
   initialChartType = 'candle',
   toggleDrawingTools
-}: HeaderProps) => {
+}: HeaderProps) {
+  const router = useRouter();
   const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol);
   const [selectedTimeframe, setSelectedTimeframe] = useState(initialTimeframe);
   const [selectedChartType, setSelectedChartType] = useState(initialChartType);
@@ -57,9 +54,8 @@ const Header = ({
     onChartTypeChange(type);
   };
 
-  const handleDrawingToolsToggle = () => {
-    logHeader('Drawing Tools Toggled');
-    toggleDrawingTools();
+  const goToStats = () => {
+    router.push('/stats');
   };
 
   return (
@@ -69,24 +65,36 @@ const Header = ({
           <span className="text-blue-500">Trading</span>
           <span>View</span>
         </div>
-        
+
+        {/* Single Symbol Search */}
         <SymbolSearch 
           onSymbolSelect={handleSymbolChange} 
           initialSymbol={selectedSymbol} 
         />
-        
+
+        {/* Quick Stats Link */}
+        <button 
+          onClick={goToStats}
+          className="px-2 py-1 text-xs bg-[#2A2E39] rounded hover:bg-[#363A45]"
+        >
+          Stats
+        </button>
+
+        {/* Timeframe */}
         <TimeframeSelector 
           onTimeframeChange={handleTimeframeChange}
           selectedTimeframe={selectedTimeframe}
         />
-        
+
+        {/* Chart Type */}
         <ChartTypeSelector 
           onChartTypeChange={handleChartTypeChange}
           selectedChartType={selectedChartType}
         />
-        
+
+        {/* Toggle Drawing Tools */}
         <button 
-          onClick={handleDrawingToolsToggle}
+          onClick={toggleDrawingTools}
           className="px-3 py-1 bg-[#2A2E39] hover:bg-[#363A45] rounded flex items-center"
         >
           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -95,12 +103,10 @@ const Header = ({
           Draw
         </button>
       </div>
-      
+
       <div className="flex items-center space-x-2">
         <ThemeToggle />
       </div>
     </div>
   );
-};
-
-export default Header; 
+}

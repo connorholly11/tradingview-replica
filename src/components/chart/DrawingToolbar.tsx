@@ -14,16 +14,16 @@ import {
   FiMinus
 } from 'react-icons/fi';
 
-type DrawingTool = 
-  | 'cursor' 
-  | 'line' 
-  | 'horizontal' 
-  | 'vertical' 
-  | 'rectangle' 
-  | 'circle' 
-  | 'arrow' 
-  | 'text' 
-  | 'fibonacci' 
+type DrawingTool =
+  | 'cursor'
+  | 'line'
+  | 'horizontal'
+  | 'vertical'
+  | 'rectangle'
+  | 'circle'
+  | 'arrow'
+  | 'text'
+  | 'fibonacci'
   | 'brush'
   | 'none';
 
@@ -31,20 +31,20 @@ interface DrawingToolbarProps {
   onToolSelect: (tool: DrawingTool) => void;
 }
 
-export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
-  onToolSelect
-}) => {
+export default function DrawingToolbar({ onToolSelect }: DrawingToolbarProps) {
   const [activeTool, setActiveTool] = useState<DrawingTool>('none');
-  
+
   const handleToolSelect = (tool: DrawingTool) => {
-    setActiveTool(tool === activeTool ? 'none' : tool);
-    onToolSelect(tool === activeTool ? 'none' : tool);
+    const newTool = tool === activeTool ? 'none' : tool;
+    setActiveTool(newTool);
+    onToolSelect(newTool);
   };
-  
+
   return (
-    <div className="bg-[#131722] border-r border-[#2A2E39] h-full flex flex-col items-center py-2 space-y-4">
+    // Now we style it as a vertical sidebar
+    <div className="absolute top-0 left-0 w-12 h-full bg-[#131722] border-r border-[#2A2E39] flex flex-col items-center py-2 z-20">
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'cursor' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('cursor')}
@@ -54,7 +54,7 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       </button>
 
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'line' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('line')}
@@ -62,9 +62,9 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       >
         <FiTrendingUp size={20} />
       </button>
-      
+
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'horizontal' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('horizontal')}
@@ -72,9 +72,9 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       >
         <FiMinus size={20} />
       </button>
-      
+
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'vertical' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('vertical')}
@@ -84,9 +84,9 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
           <FiMinus size={20} />
         </div>
       </button>
-      
+
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'rectangle' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('rectangle')}
@@ -94,9 +94,9 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       >
         <FiSquare size={20} />
       </button>
-      
+
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'circle' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('circle')}
@@ -104,9 +104,9 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       >
         <FiCircle size={20} />
       </button>
-      
+
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'arrow' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('arrow')}
@@ -114,9 +114,9 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       >
         <FiArrowRight size={20} />
       </button>
-      
+
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'text' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('text')}
@@ -124,9 +124,9 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       >
         <FiType size={20} />
       </button>
-      
+
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'fibonacci' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('fibonacci')}
@@ -134,9 +134,9 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       >
         <FiPocket size={20} />
       </button>
-      
+
       <button
-        className={`p-2 rounded-md ${
+        className={`p-2 rounded-md mb-2 ${
           activeTool === 'brush' ? 'bg-[#2A2E39]' : 'hover:bg-[#2A2E39] text-gray-400'
         }`}
         onClick={() => handleToolSelect('brush')}
@@ -144,11 +144,14 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       >
         <FiPenTool size={20} />
       </button>
-      
+
       <div className="mt-auto">
         <button
           className="p-2 text-gray-400 hover:text-white rounded-md hover:bg-[#2A2E39]"
-          onClick={() => setActiveTool('none')}
+          onClick={() => {
+            setActiveTool('none');
+            // Potentially clear drawings if we had that logic
+          }}
           title="Clear All Drawings"
         >
           <FiTrash size={20} />
@@ -156,6 +159,4 @@ export const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
       </div>
     </div>
   );
-};
-
-export default DrawingToolbar; 
+}

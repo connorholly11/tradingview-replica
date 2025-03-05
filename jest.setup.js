@@ -1,74 +1,107 @@
-// Import Jest DOM extensions
-require('@testing-library/jest-dom');
+// Import Jest-DOM extensions
+import '@testing-library/jest-dom';
 
-// Mock the next/navigation functions
+// Mock Next.js router
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(() => ({
+  useRouter: () => ({
     push: jest.fn(),
     replace: jest.fn(),
     prefetch: jest.fn(),
     back: jest.fn(),
-    forward: jest.fn(),
-  })),
-  usePathname: jest.fn(() => '/'),
-  useSearchParams: jest.fn(() => new URLSearchParams()),
+    pathname: '/'
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+  useParams: () => ({}),
 }));
 
-// Mock the ResizeObserver
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
+// Polyfill for TextEncoder/TextDecoder used in Node.js environments
+if (typeof TextEncoder === 'undefined') {
+  global.TextEncoder = require('util').TextEncoder;
+}
 
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+if (typeof TextDecoder === 'undefined') {
+  global.TextDecoder = require('util').TextDecoder;
+}
 
-// Mock IntersectionObserver
-global.IntersectionObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
+// Mock objects that don't exist in JSDOM
+if (typeof ResizeObserver === 'undefined') {
+  global.ResizeObserver = class ResizeObserver {
+    constructor(callback) {
+      this.callback = callback;
+    }
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
 
-// Mock console.error to fail tests when React errors occur
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  // Fail tests if React specific errors are found
-  const message = args[0];
+if (typeof IntersectionObserver === 'undefined') {
+  global.IntersectionObserver = class IntersectionObserver {
+    constructor(callback) {
+      this.callback = callback;
+    }
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
+// Mock WebSocket for tests
+global.WebSocket = class MockWebSocket {
+  constructor(url) {
+    this.url = url;
+    this.readyState = 1; // OPEN
+    
+    // Call onopen asynchronously to simulate connection
+    setTimeout(() => {
+      if (this.onopen) this.onopen();
+    }, 0);
+  }
+  
+  send() {}
+  close() {}
+  
+  // Event handlers that will be set by the code
+  onopen = null;
+  onmessage = null;
+  onclose = null;
+  onerror = null;
+};
+
+// Constants
+global.WebSocket.CONNECTING = 0;
+global.WebSocket.OPEN = 1;
+global.WebSocket.CLOSING = 2;
+global.WebSocket.CLOSED = 3;
+
+// Fail tests when React has an error
+console.error = (message) => {
   if (
-    typeof message === 'string' &&
-    (message.includes('Warning: An update to') ||
-      message.includes('Warning: Can\'t perform a React state update'))
+    message.includes('Error: Uncaught [') ||
+    message.includes('act(...)') ||
+    message.includes('Warning: ReactDOM.render')
   ) {
     throw new Error(message);
   }
-  originalConsoleError(...args);
 };
 
-// Mock the lightweight-charts module
+// Mock for lightweight-charts module
 jest.mock('lightweight-charts', () => ({
   createChart: jest.fn().mockReturnValue({
     applyOptions: jest.fn(),
     resize: jest.fn(),
-    addCandlestickSeries: jest.fn().mockReturnValue({
-      setData: jest.fn(),
+    timeScale: jest.fn().mockReturnValue({
+      fitContent: jest.fn(),
       applyOptions: jest.fn(),
-      update: jest.fn(),
+      scrollToPosition: jest.fn(),
+      subscribeVisibleTimeRangeChange: jest.fn(),
+      getVisibleRange: jest.fn().mockReturnValue({ from: 0, to: 0 }),
     }),
-    addLineSeries: jest.fn().mockReturnValue({
+    priceScale: jest.fn().mockReturnValue({
+      applyOptions: jest.fn(),
+    }),
+    addCandlestickSeries: jest.fn().mockReturnValue({
       setData: jest.fn(),
       applyOptions: jest.fn(),
       update: jest.fn(),
@@ -78,13 +111,29 @@ jest.mock('lightweight-charts', () => ({
       applyOptions: jest.fn(),
       update: jest.fn(),
     }),
-    timeScale: jest.fn().mockReturnValue({
-      fitContent: jest.fn(),
+    addLineSeries: jest.fn().mockReturnValue({
+      setData: jest.fn(),
       applyOptions: jest.fn(),
+      update: jest.fn(),
+    }),
+    addHistogramSeries: jest.fn().mockReturnValue({
+      setData: jest.fn(),
+      applyOptions: jest.fn(),
+      update: jest.fn(),
     }),
     subscribeCrosshairMove: jest.fn(),
     unsubscribeCrosshairMove: jest.fn(),
     remove: jest.fn(),
   }),
-  UTCTimestamp: jest.fn(),
+  CrosshairMode: {
+    Normal: 'normal',
+    Magnet: 'magnet',
+  },
+  LineStyle: {
+    Solid: 0,
+    Dotted: 1,
+    Dashed: 2,
+    LargeDashed: 3,
+    SparseDotted: 4,
+  },
 })); 

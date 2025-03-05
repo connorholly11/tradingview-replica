@@ -1,4 +1,4 @@
-import { fetchPolygonAggregates, mapTimeframeToPolygonParams, getTimeframeDateRange } from '@/lib/apiService';
+import { fetchPolygonAggregates, mapTimeframeToPolygonParams, getTimeframeDateRange } from '../src/lib/apiService';
 import { server } from './mocks/server';
 
 // Enable API mocking before tests

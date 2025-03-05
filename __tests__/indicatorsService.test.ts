@@ -4,8 +4,8 @@ import {
   calculateRSI, 
   calculateMACD, 
   calculateBollingerBands 
-} from '@/lib/indicatorsService';
-import { ChartData } from '@/lib/apiService';
+} from '../src/lib/indicatorsService';
+import { ChartData } from '../src/lib/apiService';
 import { UTCTimestamp } from 'lightweight-charts';
 
 // Sample data for testing

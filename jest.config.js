@@ -1,6 +1,5 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {
@@ -8,10 +7,25 @@ module.exports = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
   },
   transform: {
-    '^.+\\.(ts|tsx)$': ['babel-jest', { presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'] }]
+    '^.+\\.(ts|tsx|js|jsx)$': ['@swc/jest', {
+      jsc: {
+        parser: {
+          syntax: 'typescript',
+          tsx: true,
+          decorators: false,
+          dynamicImport: false
+        },
+        transform: {
+          react: {
+            runtime: 'automatic'
+          }
+        },
+        target: 'es2021',
+      }
+    }]
   },
   testMatch: [
-    '**/__tests__/**/*.(test|spec).(ts|tsx)'
+    '<rootDir>/__tests__/**/*.(test|spec).(ts|tsx)'
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
