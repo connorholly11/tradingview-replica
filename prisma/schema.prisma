@@ -1,0 +1,453 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Core User Model for Authentication and Profile
+model User {
+  id                  String     @id @default(cuid())
+  email               String     @unique
+  name                String?
+  phone               String?
+  country             String?
+  isVerified          Boolean    @default(false)
+  verifiedAt          DateTime?
+  verifiedBy          String?
+  status              UserStatus @default(PENDING)
+  role                UserRole   @default(TRADER)
+  clerkUsername       String?    // For Clerk Authentication
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  lastLoginAt         DateTime?
+  profilePictureUrl   String?
+  tradingPreferences  Json?      // Stored user preferences for trading platform
+
+  // Relations
+  accounts            Account[]
+  actionsPerformed    AuditLog[]    @relation("ActionBy")
+  auditLogs           AuditLog[]    @relation("AffectedUser")
+  stats               UserStats?
+  chartLayouts        ChartLayout[]
+  watchlists          Watchlist[]
+  indicators          CustomIndicator[]
+  alertSettings       AlertSetting[]
+
+  @@map("users")
+}
+
+// Statistical tracking for user trading performance
+model UserStats {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  totalAccounts     Int       @default(0)
+  activeAccounts    Int       @default(0)
+  completedAccounts Int       @default(0)
+  fundedAccounts    Int       @default(0)
+  failedAccounts    Int       @default(0)
+  totalTrades       Int       @default(0)
+  winningTrades     Int       @default(0)
+  losingTrades      Int       @default(0)
+  profitableDays    Int       @default(0)
+  tradingDays       Int       @default(0)
+  avgDailyPnL       Decimal   @default(0)
+  avgTradeSize      Decimal   @default(0)
+  avgWinSize        Decimal   @default(0)
+  avgLossSize       Decimal   @default(0)
+  bestPnL           Decimal   @default(0)
+  worstPnL          Decimal   @default(0)
+  avgDrawdown       Decimal   @default(0)
+  maxDrawdown       Decimal   @default(0)
+  winRate           Decimal   @default(0)
+  profitFactor      Decimal   @default(0)
+  favoriteSymbols   String[]
+  bestSymbols       String[]
+  worstSymbols      String[]
+  firstTradeDate    DateTime?
+  lastTradeDate     DateTime?
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id])
+
+  @@map("user_stats")
+}
+
+// Trading Programs Definition
+model Program {
+  id                      String        @id @default(cuid())
+  name                    String
+  description             String?
+  initialBalance          Decimal
+  maxDailyLoss            Decimal
+  maxTotalLoss            Decimal
+  profitTarget            Decimal
+  minTradingDays          Int
+  maxDailyDrawdown        Decimal?
+  maxTotalDrawdown        Decimal?
+  maxPositionSizeCrypto   Decimal?
+  maxPositionSizeFutures  Int?
+  maxPositionSize         Decimal?
+  allowedSymbols          String[]
+  allowedTimeframes       String[]      // Supported timeframes for program
+  phases                  Int           @default(1)
+  isActive                Boolean       @default(true)
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  drawdownAmount          Decimal?
+  drawdownType            DrawdownType?
+  endOfDayBuffer          Decimal?
+  accounts                Account[]
+
+  @@map("programs")
+}
+
+// Trading Account Model
+model Account {
+  id                    String        @id @default(cuid())
+  userId                String
+  programId             String
+  accountNumber         Int
+  balance               Decimal
+  initialBalance        Decimal
+  currentDrawdown       Decimal       @default(0)
+  maxDrawdown           Decimal       @default(0)
+  totalPnL              Decimal       @default(0)
+  status                AccountStatus @default(PENDING)
+  phase                 Int           @default(1)
+  tradingDays           Int           @default(0)
+  previousAccountId     String?
+  attemptNumber         Int           @default(1)
+  isLocked              Boolean       @default(false)
+  lockedBy              String?
+  lockedReason          String?
+  winningTrades         Int           @default(0)
+  losingTrades          Int           @default(0)
+  totalTrades           Int           @default(0)
+  profitableDays        Int           @default(0)
+  createdAt             DateTime      @default(now())
+  startDate             DateTime?
+  endDate               DateTime?
+  lastTradeAt           DateTime?
+  dailyOpenBalance      Decimal       @default(0)
+  endOfDayDrawdownFloor Decimal?      @default(0)
+  endOfDayHighBalance   Decimal?      @default(0)
+  equity                Decimal       @default(0)
+  program               Program       @relation(fields: [programId], references: [id])
+  user                  User          @relation(fields: [userId], references: [id])
+  metrics               DailyMetric[]
+  positions             Position[]
+  trades                Trade[]
+  violations            Violation[]
+
+  @@unique([userId, accountNumber])
+  @@map("accounts")
+}
+
+// Open Trading Positions
+model Position {
+  id              String   @id @default(cuid())
+  accountId       String
+  symbol          String
+  quantity        Int
+  avgPrice        Decimal
+  currentPrice    Decimal
+  pnl             Decimal  @default(0)
+  stopLossPrice   Decimal?
+  takeProfitPrice Decimal?
+  openedAt        DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  account         Account  @relation(fields: [accountId], references: [id])
+
+  @@unique([accountId, symbol])
+  @@map("positions")
+}
+
+// Individual Trades
+model Trade {
+  id          String    @id @default(cuid())
+  accountId   String
+  symbol      String
+  side        TradeSide
+  quantity    Int
+  price       Decimal
+  marketPrice Decimal
+  commission  Decimal   @default(0)
+  pnl         Decimal?
+  isWin       Boolean?
+  timestamp   DateTime  @default(now())
+  account     Account   @relation(fields: [accountId], references: [id])
+
+  @@map("trades")
+}
+
+// Daily Trading Metrics
+model DailyMetric {
+  id            String   @id @default(cuid())
+  accountId     String
+  date          DateTime @default(now())
+  startBalance  Decimal
+  endBalance    Decimal
+  highBalance   Decimal
+  lowBalance    Decimal
+  trades        Int      @default(0)
+  grossPnL      Decimal  @default(0)
+  netPnL        Decimal  @default(0)
+  drawdown      Decimal  @default(0)
+  winningTrades Int      @default(0)
+  losingTrades  Int      @default(0)
+  largestWin    Decimal  @default(0)
+  largestLoss   Decimal  @default(0)
+  account       Account  @relation(fields: [accountId], references: [id])
+
+  @@unique([accountId, date])
+  @@map("daily_metrics")
+}
+
+// Trading Rule Violations
+model Violation {
+  id          String          @id @default(cuid())
+  accountId   String
+  type        ViolationType
+  value       Decimal
+  threshold   Decimal
+  description String
+  timestamp   DateTime        @default(now())
+  resolved    Boolean         @default(false)
+  resolvedBy  String?
+  resolution  ResolutionType?
+  notes       String?
+  account     Account         @relation(fields: [accountId], references: [id])
+
+  @@map("violations")
+}
+
+// Admin Action Audit Log
+model AuditLog {
+  id         String      @id @default(cuid())
+  userId     String
+  adminId    String
+  action     AdminAction
+  entityType String
+  entityId   String
+  details    Json
+  timestamp  DateTime    @default(now())
+  admin      User        @relation("ActionBy", fields: [adminId], references: [id])
+  user       User        @relation("AffectedUser", fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// --- TradingView-specific Models ---
+
+// Market Symbols (Instruments) that can be traded/analyzed
+model Symbol {
+  id             String          @id @default(cuid())
+  ticker         String          @unique
+  name           String
+  description    String?
+  type           InstrumentType
+  exchange       String
+  sector         String?
+  industry       String?
+  isActive       Boolean         @default(true)
+  tradingHours   Json?           // Trading hours configuration
+  tickSize       Decimal?        // Minimum price movement
+  pointValue     Decimal?        // Value of one point move (futures/commodities)
+  margin         Decimal?        // Margin requirement percentage
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  priceData      PriceData[]
+  watchlistItems WatchlistItem[]
+
+  @@map("symbols")
+}
+
+// Price Data Storage
+model PriceData {
+  id         String   @id @default(cuid())
+  symbolId   String
+  timeframe  String   // 1m, 5m, 15m, 1h, 1d, etc.
+  timestamp  DateTime
+  open       Decimal
+  high       Decimal
+  low        Decimal
+  close      Decimal
+  volume     Decimal?
+  symbol     Symbol   @relation(fields: [symbolId], references: [id])
+
+  @@unique([symbolId, timeframe, timestamp])
+  @@map("price_data")
+}
+
+// User Chart Layouts/Templates
+model ChartLayout {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  isDefault   Boolean  @default(false)
+  config      Json     // Chart configuration JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name])
+  @@map("chart_layouts")
+}
+
+// User Watchlists
+model Watchlist {
+  id          String          @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  isDefault   Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  items       WatchlistItem[]
+  user        User            @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name])
+  @@map("watchlists")
+}
+
+// Watchlist Items
+model WatchlistItem {
+  id          String    @id @default(cuid())
+  watchlistId String
+  symbolId    String
+  notes       String?
+  createdAt   DateTime  @default(now())
+  watchlist   Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+  symbol      Symbol    @relation(fields: [symbolId], references: [id])
+
+  @@unique([watchlistId, symbolId])
+  @@map("watchlist_items")
+}
+
+// Custom Technical Indicators
+model CustomIndicator {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  script      String   // Pine Script or other definition
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name])
+  @@map("custom_indicators")
+}
+
+// Price and Indicator Alerts
+model AlertSetting {
+  id          String      @id @default(cuid())
+  userId      String
+  symbolId    String?
+  name        String
+  description String?
+  type        AlertType
+  condition   Json        // Alert condition configuration
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id])
+
+  @@map("alert_settings")
+}
+
+// System Health Monitoring
+model SystemStatus {
+  id            String    @id @default(cuid())
+  component     String    // Which system component (API, WebSocket, Database, etc.)
+  status        String    // UP, DOWN, DEGRADED
+  message       String?
+  responseTime  Int?      // ms 
+  updatedAt     DateTime  @default(now())
+
+  @@unique([component])
+  @@map("system_status")
+}
+
+// --- Enums ---
+
+enum DrawdownType {
+  STATIC
+  END_OF_DAY
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum UserRole {
+  ADMIN
+  TRADER
+  SUPPORT
+  ANALYST
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  VIOLATED
+  COMPLETED
+  FUNDED
+  CLOSED
+}
+
+enum TradeSide {
+  BUY
+  SELL
+}
+
+enum ViolationType {
+  DAILY_LOSS
+  MAX_LOSS
+  DRAWDOWN
+  PROFIT_TARGET
+  POSITION_SIZE
+  END_OF_DAY_DRAWDOWN
+}
+
+enum ResolutionType {
+  WARNING
+  TERMINATED
+  OVERRIDE
+}
+
+enum AdminAction {
+  USER_VERIFY
+  USER_SUSPEND
+  ACCOUNT_CREATE
+  ACCOUNT_LOCK
+  ACCOUNT_RESET
+  VIOLATION_RESOLVE
+  PROGRAM_UPDATE
+}
+
+enum InstrumentType {
+  STOCK
+  FUTURES
+  FOREX
+  CRYPTO
+  INDEX
+  OPTION
+  ETF
+}
+
+enum AlertType {
+  PRICE
+  INDICATOR
+  VOLUME
+  VOLATILITY
+  PATTERN
+  CUSTOM
+} 

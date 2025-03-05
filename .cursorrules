@@ -1,0 +1,116 @@
+Next.js & TypeScript Codebase Guidelines – “7.5” Standard
+1. Project Structure & Code Organization
+1.1. Pages & API Routes
+Pages Directory:
+
+Use the pages/ directory (or the new app/ directory in Next.js 13+) to define routes.
+For pages using server-side rendering or static generation, structure your files to maximize clarity.
+Separate page-level concerns from UI components. Keep pages primarily as composition layers (using functions like getStaticProps or getServerSideProps).
+API Endpoints:
+
+Place API routes in pages/api/ (or app/api/ for Next.js 13+).
+Limit these files to handling HTTP-specific concerns: parsing requests, authentication checks, and delegating business logic to service functions.
+Aim for concise files (ideal: 50–75 lines; max: 100 lines). If an API route grows too large, refactor business logic into services.
+1.2. Components
+UI Components:
+Store React components in components/ or within feature-specific directories.
+Server vs. Client Components:
+When using Next.js 13+, clearly mark client components (using "use client") and server components.
+Keep server components focused on data fetching and heavy computations, while client components manage interactivity.
+Break down large components into smaller ones (ideal file length: 150–250 lines; max: 300 lines).
+1.3. Services & Business Logic
+Services Directory:
+Place domain logic and external integrations in a dedicated lib/services/ or services/ folder.
+Ensure these modules are independent, testable, and focused on a single concern.
+Use TypeScript’s typing to enforce clear contracts between services and their consumers.
+1.4. Utilities & Helpers
+Utilities:
+Organize generic helper functions in a utils/ directory.
+Keep these functions pure and well-typed to guarantee predictable behavior.
+Document any non-obvious business rules or transformations.
+1.5. Types & Interfaces
+Types Directory:
+Maintain a centralized types/ folder where you define domain-specific interfaces, types, and enums.
+Leverage TypeScript’s advanced types (unions, intersections, generics) to create self-documenting and reusable definitions.
+Export common types from an index file to simplify imports across the codebase.
+2. File Size, Complexity, and Modularity
+2.1. File Length Guidelines
+Pages & API Files:
+
+Ideal: 50–75 lines; Max: 100 lines.
+Keep logic minimal and delegate to services/utilities.
+React Components:
+
+Ideal: 150–250 lines; Max: 300 lines.
+Use hooks and smaller sub-components to break down complex logic.
+Services & Utilities:
+
+Ideal: 150–250 lines; Max: 300 lines.
+Refactor and split files that approach or exceed these limits.
+2.2. Modularization & Refactoring
+Regularly review files during code reviews.
+If any module becomes too large or unwieldy, extract related functions or logic into separate files.
+Prioritize separation of concerns to reduce duplication and improve testability.
+3. Real-Time Data Handling & External Integrations
+3.1. WebSocket & Real-Time Clients
+Encapsulation:
+Isolate WebSocket logic in dedicated service modules (e.g., services/realtime.ts).
+Implement reconnection strategies (e.g., exponential backoff) uniformly across the project.
+Validate incoming data with the types defined in your types/ directory.
+3.2. External APIs & Data Fetching
+Data Fetching in Next.js:
+Utilize Next.js data fetching methods (getStaticProps, getServerSideProps, or React hooks in client components) to keep data access predictable.
+Cache data and manage state effectively using SWR or React Query where appropriate.
+4. Error Handling & Logging
+4.1. Centralized Error Management
+Error Boundaries:
+
+Implement error boundaries in your React components to catch and handle UI errors gracefully.
+Create custom error classes for domain-specific issues and use them consistently.
+Logging:
+
+Use structured logging with clear severity levels. Avoid leaving console.log statements in production code.
+Consider integrating log aggregation services for monitoring (e.g., LogRocket, Sentry).
+4.2. Consistent API Responses
+Return structured JSON responses from API routes (e.g., { error: string, details?: any }).
+Include HTTP status codes and clear error messages to aid in debugging and user feedback.
+5. Data Transformation, Naming, and Performance
+5.1. Data Transformation
+Helper Functions:
+Write explicit functions for transforming data. Document edge cases and performance implications.
+Use memoization or caching for heavy computations when necessary.
+5.2. Naming Conventions
+Descriptive Naming:
+Use clear, descriptive names for functions, components, and variables to reflect their purpose.
+Maintain consistency across modules to reduce cognitive load for new developers.
+5.3. Performance Considerations
+Optimization:
+Use Next.js optimizations like code-splitting and lazy loading.
+Profile and optimize data fetching and rendering to ensure a smooth user experience.
+6. Database & Prisma Integration
+6.1. Data Access with Prisma
+Centralized Database Module:
+Use Prisma as your ORM and centralize its usage in a dedicated module (e.g., lib/db.ts).
+Isolate direct queries in the service layer rather than in API routes or components.
+6.2. Schema Management & Migrations
+Schema Files & Migrations:
+Keep your Prisma schema file updated and document migration changes.
+Use version control for database schemas and test migrations in staging before deploying to production.
+7. Documentation & Developer Onboarding
+7.1. Project Documentation
+README & Docs:
+Provide a comprehensive README.md with setup instructions, architectural overviews, and development workflow guidelines.
+Maintain additional documentation for API endpoints, services, and key utilities.
+7.2. Inline Code Documentation
+Doc Blocks & Comments:
+Use TypeScript’s JSDoc annotations to document public functions, interfaces, and complex logic.
+Focus on the “why” behind decisions rather than just the “what.”
+8. Striving for a 7.5 Standard in Next.js/TypeScript
+Consistency & Simplicity:
+Emphasize clear, consistent code over clever tricks. Maintain simplicity for easier onboarding and collaboration.
+Testability & Agility:
+Write unit and integration tests for critical paths. Use tools like Jest and React Testing Library.
+Continuous Improvement:
+Encourage regular code reviews and refactoring sessions to keep technical debt minimal.
+Type Safety:
+Fully leverage TypeScript to catch errors early and document expected interfaces.
