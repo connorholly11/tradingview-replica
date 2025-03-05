@@ -7,13 +7,9 @@ import ChartToolbar from './ChartToolbar';
 import ActiveIndicators from './ActiveIndicators';
 import DrawingToolbar from './DrawingToolbar';
 import {
-  fetchPolygonAggregates,
-  mapTimeframeToPolygonParams,
-  getTimeframeDateRange,
   ChartData,
   fetchAggregatesUnified
 } from '@/lib/apiService';
-import { UTCTimestamp } from 'lightweight-charts';
 import { useRealtimePriceData } from '@/hooks/useRealtimePriceData';
 
 interface IndicatorConfig {
@@ -45,7 +41,7 @@ const ChartContainer = forwardRef<
     symbol = 'AAPL',
     interval = '1D',
     chartType = 'candle',
-    dataProvider = 'polygon'
+    dataProvider = 'coinbase'
   },
   ref
 ) {
@@ -83,14 +79,29 @@ const ChartContainer = forwardRef<
     }
   }, []);
 
-  const { data: realtimeData, isConnected, error: realtimeError } = useRealtimePriceData(
+  const { 
+    data: realtimeData, 
+    isConnected, 
+    error: realtimeError, 
+    usingFallback 
+  } = useRealtimePriceData(
     currentSymbol,
     {
       initialData: chartData,
       onUpdate: handleRealtimeUpdate,
-      dataSource: dataProvider === 'coinbase' ? 'coinbase' : 'polygon'
+      dataSource: 'coinbase'
     }
   );
+
+  // For debug logging purposes
+  useEffect(() => {
+    if (realtimeData.length > 0) {
+      logChart('Received realtime data update', { 
+        lastPrice: realtimeData[realtimeData.length - 1].close,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [realtimeData]);
 
   // fetch historical data
   useEffect(() => {
@@ -210,9 +221,15 @@ const ChartContainer = forwardRef<
               </div>
             )}
 
-            {isConnected && (
+            {isConnected && !usingFallback && (
               <div className="absolute top-2 left-2 p-1 bg-green-900 bg-opacity-80 rounded-md z-10">
                 <span className="text-green-400 text-xs">LIVE</span>
+              </div>
+            )}
+            
+            {usingFallback && (
+              <div className="absolute top-2 left-2 p-1 bg-yellow-700 bg-opacity-80 rounded-md z-10">
+                <span className="text-yellow-300 text-xs">SIMULATED</span>
               </div>
             )}
 
