@@ -18,7 +18,7 @@ interface SymbolSearchProps {
 }
 
 /**
- * We now only list crypto symbols relevant for Coinbase
+ * Only BTC-USD and ETH-USD
  */
 const POPULAR_SYMBOLS = [
   'BTC-USD',
@@ -31,13 +31,12 @@ export default function SymbolSearch({ onSymbolSelect, initialSymbol = 'BTC-USD'
   const [filteredSymbols, setFilteredSymbols] = useState<string[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Filter symbols as the user types
+  // Filter symbols as user types
   useEffect(() => {
     if (searchQuery) {
-      const filtered = POPULAR_SYMBOLS.filter((sym: string) =>
+      const filtered = POPULAR_SYMBOLS.filter(sym =>
         sym.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 10); // Limit to 10 results
-
+      );
       logSymbolSearch('Search Query Updated', {
         query: searchQuery,
         resultsCount: filtered.length,
@@ -51,14 +50,13 @@ export default function SymbolSearch({ onSymbolSelect, initialSymbol = 'BTC-USD'
     }
   }, [searchQuery]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -102,7 +100,7 @@ export default function SymbolSearch({ onSymbolSelect, initialSymbol = 'BTC-USD'
           />
           {isDropdownOpen && filteredSymbols.length > 0 && (
             <div className="absolute top-full left-0 mt-1 w-full bg-[#2A2E39] text-white rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-              {filteredSymbols.map((symbol) => (
+              {filteredSymbols.map(symbol => (
                 <div
                   key={symbol}
                   className="px-3 py-2 hover:bg-[#363A45] cursor-pointer"

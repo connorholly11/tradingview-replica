@@ -1,5 +1,4 @@
 import { UTCTimestamp } from 'lightweight-charts';
-import { getSampleData } from './sampleData';
 import { fetchCoinbaseHistoricalData } from './coinbaseService';
 
 /**
@@ -60,6 +59,7 @@ export function getTimeframeDateRange(timeframe: string): { from: string; to: st
       from.setDate(from.getDate() - 75);
       break;
     case '1D':
+    case '1d':
     default:
       // ~300 days
       from.setDate(from.getDate() - 300);
@@ -74,26 +74,15 @@ export function getTimeframeDateRange(timeframe: string): { from: string; to: st
 
 /**
  * fetchAggregatesUnified
- * Rebranded: We rely solely on coinbaseService for historical data.
- * If Coinbase fails, we fallback to sampleData.
+ * Calls coinbaseService for historical data, no polygon or stock references
  */
 export async function fetchAggregatesUnified(
   ticker: string,
   timeframe: string
-): Promise<{ data: ChartData[]; warning?: string }> {
+): Promise<{ data: ChartData[] }> {
   const { from, to } = getTimeframeDateRange(timeframe);
-  try {
-    const data = await fetchCoinbaseHistoricalData(ticker, timeframe, from, to);
-    return { data };
-  } catch (err) {
-    console.error('Error in fetchAggregatesUnified:', err);
-    // fallback
-    const sample = getSampleData(ticker);
-    return {
-      data: sample,
-      warning: `Failed to fetch from Coinbase; using sample data.`,
-    };
-  }
+  const data = await fetchCoinbaseHistoricalData(ticker, timeframe, from, to);
+  return { data };
 }
 
 /**

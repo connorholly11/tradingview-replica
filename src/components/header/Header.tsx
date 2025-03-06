@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import SymbolSearch from './SymbolSearch'; // renaming it or keep as is
+import SymbolSearch from './SymbolSearch';
 import TimeframeSelector from './TimeframeSelector';
 import ChartTypeSelector from './ChartTypeSelector';
 import ThemeToggle from './ThemeToggle';
 
 const logHeader = (action: string, details?: Record<string, unknown>) => {
   const timestamp = new Date().toISOString();
-  console.log(`[Header ${timestamp}]`, action, details || '');
+  console.log(`[Header ${timestamp}]`, action, details || {});
 };
 
 interface HeaderProps {
@@ -26,7 +26,7 @@ export default function Header({
   onSymbolChange,
   onTimeframeChange,
   onChartTypeChange,
-  initialSymbol = 'AAPL',
+  initialSymbol = 'BTC-USD',
   initialTimeframe = '1D',
   initialChartType = 'candle',
   toggleDrawingTools
@@ -66,13 +66,13 @@ export default function Header({
           <span>View</span>
         </div>
 
-        {/* Single Symbol Search */}
+        {/* Symbol Search */}
         <SymbolSearch 
           onSymbolSelect={handleSymbolChange} 
           initialSymbol={selectedSymbol} 
         />
 
-        {/* Quick Stats Link */}
+        {/* Stats button */}
         <button 
           onClick={goToStats}
           className="px-2 py-1 text-xs bg-[#2A2E39] rounded hover:bg-[#363A45]"
@@ -80,13 +80,13 @@ export default function Header({
           Stats
         </button>
 
-        {/* Timeframe */}
+        {/* Timeframe Selector */}
         <TimeframeSelector 
           onTimeframeChange={handleTimeframeChange}
           selectedTimeframe={selectedTimeframe}
         />
 
-        {/* Chart Type */}
+        {/* Chart Type Selector */}
         <ChartTypeSelector 
           onChartTypeChange={handleChartTypeChange}
           selectedChartType={selectedChartType}

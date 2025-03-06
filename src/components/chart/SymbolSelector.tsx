@@ -4,61 +4,22 @@ import { useState, useRef, useEffect } from 'react';
 
 /**
  * Props for the SymbolSelector component
- * @interface SymbolSelectorProps
  */
 interface SymbolSelectorProps {
-  /** Current selected cryptocurrency symbol */
   currentSymbol: string;
-  /** Callback function when symbol changes */
   onSymbolChange: (symbol: string) => void;
 }
 
 /**
- * Interface for cryptocurrency symbol data
- * @interface SymbolData
+ * Only BTC-USD and ETH-USD for this crypto platform
  */
-interface SymbolData {
-  /** Cryptocurrency ticker symbol */
-  symbol: string;
-  /** Cryptocurrency name */
-  name: string;
-}
-
-/**
- * List of popular cryptocurrency symbols available on Coinbase API
- * These cryptocurrencies are the most commonly traded with good liquidity
- */
-const POPULAR_SYMBOLS: SymbolData[] = [
+const POPULAR_SYMBOLS = [
   { symbol: 'BTC-USD', name: 'Bitcoin' },
   { symbol: 'ETH-USD', name: 'Ethereum' },
-  { symbol: 'SOL-USD', name: 'Solana' },
-  { symbol: 'XRP-USD', name: 'XRP (Ripple)' },
-  { symbol: 'ADA-USD', name: 'Cardano' },
-  { symbol: 'DOGE-USD', name: 'Dogecoin' },
-  { symbol: 'DOT-USD', name: 'Polkadot' },
-  { symbol: 'AVAX-USD', name: 'Avalanche' },
-  { symbol: 'MATIC-USD', name: 'Polygon' },
-  { symbol: 'LINK-USD', name: 'Chainlink' },
-  { symbol: 'UNI-USD', name: 'Uniswap' },
-  { symbol: 'AAVE-USD', name: 'Aave' },
-  { symbol: 'ATOM-USD', name: 'Cosmos' },
-  { symbol: 'ALGO-USD', name: 'Algorand' },
-  { symbol: 'LTC-USD', name: 'Litecoin' },
-  { symbol: 'BCH-USD', name: 'Bitcoin Cash' },
-  { symbol: 'SHIB-USD', name: 'Shiba Inu' },
-  { symbol: 'FIL-USD', name: 'Filecoin' },
-  { symbol: 'NEAR-USD', name: 'NEAR Protocol' },
-  { symbol: 'APE-USD', name: 'ApeCoin' },
-  { symbol: 'MANA-USD', name: 'Decentraland' },
-  { symbol: 'SAND-USD', name: 'The Sandbox' },
-  { symbol: 'CRO-USD', name: 'Cronos' },
-  { symbol: 'XLM-USD', name: 'Stellar Lumens' },
-  { symbol: 'GRT-USD', name: 'The Graph' },
 ];
 
 /**
  * Symbol Selector component - allows users to search and select cryptocurrency symbols
- * @component
  */
 export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   currentSymbol,
@@ -69,9 +30,9 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // Filter symbols based on search term
-  const filteredSymbols = searchTerm 
-    ? POPULAR_SYMBOLS.filter(item => 
-        item.symbol.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredSymbols = searchTerm
+    ? POPULAR_SYMBOLS.filter(item =>
+        item.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : POPULAR_SYMBOLS;
@@ -97,7 +58,7 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
     setSearchTerm('');
   };
   
-  // Get current symbol full name
+  // Get current symbol's expanded name
   const currentSymbolData = POPULAR_SYMBOLS.find(item => item.symbol === currentSymbol);
   
   return (
@@ -124,7 +85,7 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
           <div className="p-2">
             <input
               type="text"
-              placeholder="Search cryptocurrency..."
+              placeholder="Search symbol..."
               className="w-full px-3 py-2 bg-[#131722] border border-[#2A2E39] rounded text-white text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

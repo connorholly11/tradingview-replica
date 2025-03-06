@@ -56,8 +56,10 @@ export enum AdminAction {
   PROGRAM_UPDATE = 'PROGRAM_UPDATE'
 }
 
+/**
+ * No STOCK references here; keep or remove others as needed
+ */
 export enum InstrumentType {
-  STOCK = 'STOCK',
   FUTURES = 'FUTURES',
   FOREX = 'FOREX',
   CRYPTO = 'CRYPTO',

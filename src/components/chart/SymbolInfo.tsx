@@ -29,24 +29,10 @@ const SymbolInfo = ({
   
   // Format the symbol name for display
   useEffect(() => {
-    // Map common crypto symbols to their full names
+    // Only handle BTC-USD and ETH-USD expansions
     const symbolMap: Record<string, string> = {
       'BTC-USD': 'Bitcoin / USD',
       'ETH-USD': 'Ethereum / USD',
-      'SOL-USD': 'Solana / USD',
-      'XRP-USD': 'XRP (Ripple) / USD',
-      'ADA-USD': 'Cardano / USD',
-      'DOGE-USD': 'Dogecoin / USD',
-      'DOT-USD': 'Polkadot / USD',
-      'AVAX-USD': 'Avalanche / USD',
-      'MATIC-USD': 'Polygon / USD',
-      'LINK-USD': 'Chainlink / USD',
-      'UNI-USD': 'Uniswap / USD',
-      'AAVE-USD': 'Aave / USD',
-      'ATOM-USD': 'Cosmos / USD',
-      'ALGO-USD': 'Algorand / USD',
-      'LTC-USD': 'Litecoin / USD',
-      'BCH-USD': 'Bitcoin Cash / USD'
     };
     
     setSymbolName(symbolMap[symbol] || symbol.replace('-USD', '') + ' / USD');
@@ -54,26 +40,10 @@ const SymbolInfo = ({
   
   // Format numbers for display
   const formatPrice = (price: number) => {
-    // Format based on approximate value ranges for cryptocurrencies
-    if (price > 1000) {
-      // For BTC and other high-value cryptocurrencies
-      return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(price);
-    } else if (price > 1) {
-      // For medium-valued cryptocurrencies
-      return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4,
-      }).format(price);
-    } else {
-      // For low-valued cryptocurrencies
-      return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 4,
-        maximumFractionDigits: 8,
-      }).format(price);
-    }
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 8,
+    }).format(price);
   };
   
   const formatLargeNumber = (num: number) => {
