@@ -17,10 +17,11 @@ export async function fetchWithRetry(
   while (attempt < retries) {
     try {
       const response = await fetch(url, options);
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-      }
+      
+      // Return the response even if it's not OK (404, etc.)
+      // Let the calling code decide how to handle non-200 responses
       return response;
+      
     } catch (err) {
       lastError = err;
       attempt++;
@@ -31,5 +32,6 @@ export async function fetchWithRetry(
     }
   }
 
+  // If we've exhausted all retries, throw the last error
   throw lastError;
 } 
