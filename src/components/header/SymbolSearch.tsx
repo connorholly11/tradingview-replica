@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from 'react';
  */
 const logSymbolSearch = (action: string, details?: Record<string, unknown>) => {
   const timestamp = new Date().toISOString();
-  console.log(`[SymbolSearch ${timestamp}]`, action, details || '');
+  console.log(`[SymbolSearch ${timestamp}]`, action, details || {});
 };
 
 interface SymbolSearchProps {
@@ -18,23 +18,14 @@ interface SymbolSearchProps {
 }
 
 /**
- * Define a local list of popular symbols (instead of importing from apiService).
- * You can adjust or expand this as needed for your app.
+ * We now only list crypto symbols relevant for Coinbase
  */
 const POPULAR_SYMBOLS = [
-  'AAPL',
-  'MSFT',
-  'GOOGL',
-  'GOOG',
-  'AMZN',
-  'META',
-  'TSLA',
-  'NVDA',
   'BTC-USD',
   'ETH-USD',
 ];
 
-const SymbolSearch = ({ onSymbolSelect, initialSymbol = 'AAPL' }: SymbolSearchProps) => {
+export default function SymbolSearch({ onSymbolSelect, initialSymbol = 'BTC-USD' }: SymbolSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [filteredSymbols, setFilteredSymbols] = useState<string[]>([]);
@@ -89,7 +80,7 @@ const SymbolSearch = ({ onSymbolSelect, initialSymbol = 'AAPL' }: SymbolSearchPr
           <svg className="w-4 h-4 ml-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
-              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
               clipRule="evenodd"
             />
           </svg>
@@ -126,6 +117,4 @@ const SymbolSearch = ({ onSymbolSelect, initialSymbol = 'AAPL' }: SymbolSearchPr
       </div>
     </div>
   );
-};
-
-export default SymbolSearch;
+}

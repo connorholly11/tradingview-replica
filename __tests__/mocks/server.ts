@@ -1,89 +1,57 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 
-// Define the polygon response type
-interface PolygonAggregateResult {
-  c: number; // close
-  h: number; // high
-  l: number; // low
-  o: number; // open
-  t: number; // timestamp (Unix ms)
-  v: number; // volume
-  vw: number; // volume weighted average price
-}
+// Define the Coinbase response type for candles
+// Data is an array of [ timestamp, low, high, open, close, volume ]
+type CoinbaseCandleData = [number, number, number, number, number, number];
 
-interface PolygonAggregatesResponse {
-  ticker: string;
-  status: string;
-  results: PolygonAggregateResult[];
-  resultsCount: number;
-  adjusted: boolean;
-  queryCount: number;
-  request_id: string;
-  next_url?: string;
-}
+// Sample BTC-USD data for testing
+const sampleBTCData: CoinbaseCandleData[] = [
+  // time, low, high, open, close, volume
+  [1679913600, 27100.25, 27890.45, 27150.11, 27822.64, 1250.5],
+  [1680000000, 27750.67, 28102.89, 27822.64, 28050.33, 1876.2],
+  [1680086400, 27950.33, 28550.21, 28050.33, 28249.87, 2100.8],
+];
 
-// Sample stock data for testing
-const sampleAAPLData: PolygonAggregatesResponse = {
-  ticker: 'AAPL',
-  status: 'OK',
-  results: [
-    {
-      c: 150.23,
-      h: 152.45,
-      l: 149.87,
-      o: 150.11,
-      t: 1679913600000, // 2023-03-27
-      v: 76543210,
-      vw: 151.12,
-    },
-    {
-      c: 151.75,
-      h: 153.89,
-      l: 150.45,
-      o: 150.67,
-      t: 1680000000000, // 2023-03-28
-      v: 65432109,
-      vw: 152.33,
-    },
-    {
-      c: 152.33,
-      h: 154.21,
-      l: 151.67,
-      o: 151.89,
-      t: 1680086400000, // 2023-03-29
-      v: 87654321,
-      vw: 153.05,
-    },
-  ],
-  resultsCount: 3,
-  adjusted: true,
-  queryCount: 1,
-  request_id: 'mock-request-id',
-};
+// Sample ETH-USD data for testing
+const sampleETHData: CoinbaseCandleData[] = [
+  // time, low, high, open, close, volume
+  [1679913600, 1790.25, 1820.45, 1795.11, 1810.64, 8250.5],
+  [1680000000, 1805.67, 1835.89, 1810.64, 1820.33, 9876.2],
+  [1680086400, 1815.33, 1870.21, 1820.33, 1865.87, 12100.8],
+];
 
-// Sample data for different tickers
-const tickerData: Record<string, PolygonAggregatesResponse> = {
-  'AAPL': sampleAAPLData,
-  'MSFT': {
-    ...sampleAAPLData,
-    ticker: 'MSFT',
-    results: sampleAAPLData.results.map(item => ({...item, c: item.c * 1.2, h: item.h * 1.2, l: item.l * 1.2, o: item.o * 1.2}))
-  },
-  'GOOGL': {
-    ...sampleAAPLData,
-    ticker: 'GOOGL',
-    results: sampleAAPLData.results.map(item => ({...item, c: item.c * 2.5, h: item.h * 2.5, l: item.l * 2.5, o: item.o * 2.5}))
-  }
+// Sample data for different crypto pairs
+const cryptoData: Record<string, CoinbaseCandleData[]> = {
+  'BTC-USD': sampleBTCData,
+  'ETH-USD': sampleETHData,
+  'SOL-USD': sampleBTCData.map(candle => 
+    [candle[0], candle[1] / 100, candle[2] / 100, candle[3] / 100, candle[4] / 100, candle[5] * 2]
+  ),
+  'AVAX-USD': sampleETHData.map(candle => 
+    [candle[0], candle[1] / 10, candle[2] / 10, candle[3] / 10, candle[4] / 10, candle[5] * 1.5]
+  ),
 };
 
 // Define the request handlers
 export const handlers = [
-  // Mock Polygon Aggregates API
-  http.get('https://api.polygon.io/v2/aggs/ticker/:ticker/range/:multiplier/:timespan/:from/:to', ({ params }) => {
-    const ticker = params.ticker as string;
-    // Return data for the requested ticker or fallback to AAPL
-    return HttpResponse.json(tickerData[ticker] || sampleAAPLData);
+  // Mock Coinbase Candles API
+  http.get('https://api.exchange.coinbase.com/products/:symbol/candles', ({ params, request }) => {
+    const symbol = params.symbol as string;
+    
+    // Parse query parameters
+    const url = new URL(request.url);
+    const granularity = url.searchParams.get('granularity') || '86400';
+    
+    // Return data for the requested symbol or empty array
+    const data = cryptoData[symbol] || [];
+    
+    // If data is empty, return a 404
+    if (data.length === 0) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    
+    return HttpResponse.json(data);
   }),
 ];
 

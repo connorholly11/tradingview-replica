@@ -1,7 +1,11 @@
+// src/lib/websocketService.ts
+
 /**
- * NOTICE: This file is deprecated and has been fully commented out.
- * We have moved to using Coinbase APIs instead of Polygon.
- * See coinbaseWebSocketService.ts for the current implementation.
+ * This file now serves as a re-export for our Coinbase WebSocket implementation.
+ * All WebSocket functionality is handled by coinbaseWebSocketService.ts
  */
 
-export {};
+import coinbaseWebSocketService from './coinbaseWebSocketService';
+
+// Export coinbaseWebSocketService as the default
+export default coinbaseWebSocketService;

@@ -64,7 +64,7 @@ async function main() {
       maxTotalDrawdown: 10,
       maxPositionSize: 5000,
       phases: 1,
-      allowedSymbols: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'ES', 'NQ', 'CL', 'GC'],
+      allowedSymbols: ['BTC-USD', 'ETH-USD', 'SOL-USD', 'XRP-USD', 'ADA-USD'],
       allowedTimeframes: ['1m', '5m', '15m', '1h', '4h', '1d'],
       drawdownType: 'STATIC',
     },
@@ -88,7 +88,7 @@ async function main() {
       maxTotalDrawdown: 8,
       maxPositionSize: 10000,
       phases: 2,
-      allowedSymbols: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NFLX', 'ES', 'NQ', 'CL', 'GC', 'SI', 'BTC', 'ETH'],
+      allowedSymbols: ['BTC-USD', 'ETH-USD', 'SOL-USD', 'XRP-USD', 'ADA-USD', 'DOGE-USD', 'DOT-USD', 'AVAX-USD', 'MATIC-USD', 'LINK-USD'],
       allowedTimeframes: ['1m', '5m', '15m', '30m', '1h', '4h', '1d', '1w'],
       drawdownType: 'STATIC',
     },
@@ -98,20 +98,19 @@ async function main() {
 
   // Create common market symbols
   const symbolsToCreate = [
-    { ticker: 'AAPL', name: 'Apple Inc.', type: InstrumentType.STOCK, exchange: 'NASDAQ' },
-    { ticker: 'MSFT', name: 'Microsoft Corporation', type: InstrumentType.STOCK, exchange: 'NASDAQ' },
-    { ticker: 'GOOGL', name: 'Alphabet Inc.', type: InstrumentType.STOCK, exchange: 'NASDAQ' },
-    { ticker: 'AMZN', name: 'Amazon.com Inc.', type: InstrumentType.STOCK, exchange: 'NASDAQ' },
-    { ticker: 'TSLA', name: 'Tesla Inc.', type: InstrumentType.STOCK, exchange: 'NASDAQ' },
-    { ticker: 'META', name: 'Meta Platforms Inc.', type: InstrumentType.STOCK, exchange: 'NASDAQ' },
-    { ticker: 'NFLX', name: 'Netflix Inc.', type: InstrumentType.STOCK, exchange: 'NASDAQ' },
-    { ticker: 'ES', name: 'E-mini S&P 500 Futures', type: InstrumentType.FUTURES, exchange: 'CME' },
-    { ticker: 'NQ', name: 'E-mini Nasdaq 100 Futures', type: InstrumentType.FUTURES, exchange: 'CME' },
-    { ticker: 'CL', name: 'Crude Oil Futures', type: InstrumentType.FUTURES, exchange: 'NYMEX' },
-    { ticker: 'GC', name: 'Gold Futures', type: InstrumentType.FUTURES, exchange: 'COMEX' },
-    { ticker: 'SI', name: 'Silver Futures', type: InstrumentType.FUTURES, exchange: 'COMEX' },
-    { ticker: 'BTC', name: 'Bitcoin', type: InstrumentType.CRYPTO, exchange: 'CRYPTO' },
-    { ticker: 'ETH', name: 'Ethereum', type: InstrumentType.CRYPTO, exchange: 'CRYPTO' },
+    { ticker: 'BTC-USD', name: 'Bitcoin', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'ETH-USD', name: 'Ethereum', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'SOL-USD', name: 'Solana', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'XRP-USD', name: 'XRP (Ripple)', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'ADA-USD', name: 'Cardano', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'DOGE-USD', name: 'Dogecoin', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'DOT-USD', name: 'Polkadot', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'AVAX-USD', name: 'Avalanche', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'MATIC-USD', name: 'Polygon', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'LINK-USD', name: 'Chainlink', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'UNI-USD', name: 'Uniswap', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'LTC-USD', name: 'Litecoin', type: InstrumentType.CRYPTO, exchange: 'COINBASE' },
+    { ticker: 'BCH-USD', name: 'Bitcoin Cash', type: InstrumentType.CRYPTO, exchange: 'COINBASE' }
   ];
 
   for (const symbol of symbolsToCreate) {
@@ -238,7 +237,7 @@ async function main() {
   });
 
   // Add symbols to watchlist
-  const symbolsForWatchlist = ['AAPL', 'MSFT', 'TSLA', 'ES', 'BTC'];
+  const symbolsForWatchlist = ['BTC-USD', 'ETH-USD', 'SOL-USD', 'XRP-USD', 'DOGE-USD'];
   
   for (const ticker of symbolsForWatchlist) {
     const symbol = await prisma.symbol.findUnique({

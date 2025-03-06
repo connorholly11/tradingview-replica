@@ -1,4 +1,4 @@
-import { fetchPolygonAggregates, mapTimeframeToPolygonParams, getTimeframeDateRange } from '../src/lib/apiService';
+import { getTimeframeDateRange, fetchAggregatesUnified } from '../src/lib/apiService';
 import { server } from './mocks/server';
 
 // Enable API mocking before tests
@@ -11,26 +11,19 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('API Service', () => {
-  describe('fetchPolygonAggregates', () => {
-    it('should fetch and transform data successfully', async () => {
-      const { data, error, warning } = await fetchPolygonAggregates(
-        'AAPL',
-        1,
-        'day',
-        '2023-03-27',
-        '2023-03-29',
-        true
-      );
+  describe('fetchAggregatesUnified', () => {
+    it('should fetch data from Coinbase for crypto symbols', async () => {
+      // Mock implementation uses server.ts which will handle the actual response
+      const { data, warning } = await fetchAggregatesUnified('BTC-USD', '1D');
 
-      // Verify no errors or warnings
-      expect(error).toBeUndefined();
+      // Verify no warnings
       expect(warning).toBeUndefined();
 
       // Verify data exists and has expected format
       expect(data).toBeDefined();
-      expect(data.length).toBe(3);
+      expect(data.length).toBeGreaterThan(0);
 
-      // Verify first data point transformed correctly
+      // Verify data point structure
       const firstPoint = data[0];
       expect(firstPoint).toHaveProperty('time');
       expect(firstPoint).toHaveProperty('open');
@@ -40,58 +33,13 @@ describe('API Service', () => {
       expect(firstPoint).toHaveProperty('volume');
     });
 
-    it('should return data for different tickers', async () => {
-      const { data: appleData } = await fetchPolygonAggregates(
-        'AAPL',
-        1,
-        'day',
-        '2023-03-27',
-        '2023-03-29',
-        true
-      );
+    it('should return sample data for non-crypto symbols', async () => {
+      const { data, warning } = await fetchAggregatesUnified('AAPL', '1D');
 
-      const { data: microsoftData } = await fetchPolygonAggregates(
-        'MSFT',
-        1,
-        'day',
-        '2023-03-27',
-        '2023-03-29',
-        true
-      );
-
-      // Check that data points exist
-      expect(appleData).toBeDefined();
-      expect(microsoftData).toBeDefined();
-      
-      // Microsoft prices should be higher than Apple (based on our mock)
-      expect(microsoftData[0].close).toBeGreaterThan(appleData[0].close);
-    });
-  });
-
-  describe('mapTimeframeToPolygonParams', () => {
-    it('should map 1m timeframe correctly', () => {
-      const result = mapTimeframeToPolygonParams('1m');
-      expect(result).toEqual({ multiplier: 1, timespan: 'minute' });
-    });
-
-    it('should map 1h timeframe correctly', () => {
-      const result = mapTimeframeToPolygonParams('1h');
-      expect(result).toEqual({ multiplier: 1, timespan: 'hour' });
-    });
-
-    it('should map 1D timeframe correctly', () => {
-      const result = mapTimeframeToPolygonParams('1D');
-      expect(result).toEqual({ multiplier: 1, timespan: 'day' });
-    });
-
-    it('should map 1W timeframe correctly', () => {
-      const result = mapTimeframeToPolygonParams('1W');
-      expect(result).toEqual({ multiplier: 1, timespan: 'week' });
-    });
-
-    it('should map 1M timeframe correctly', () => {
-      const result = mapTimeframeToPolygonParams('1M');
-      expect(result).toEqual({ multiplier: 1, timespan: 'month' });
+      // There should be a warning since AAPL is not a crypto symbol
+      expect(warning).toBeDefined();
+      expect(data).toBeDefined();
+      expect(data.length).toBeGreaterThan(0);
     });
   });
 
@@ -109,25 +57,35 @@ describe('API Service', () => {
     it('should return appropriate date ranges for 1D timeframe', () => {
       const { from, to } = getTimeframeDateRange('1D');
       
-      // 30 days back from 2023-03-30
-      expect(from).toMatch(/2023-02-\d{2}/);
-      expect(to).toBe('2023-03-30');
+      // ~300 days back from 2023-03-30
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      
+      expect(fromDate.getFullYear()).toBe(2022);
+      expect(toDate.toISOString().split('T')[0]).toBe('2023-03-30');
     });
 
-    it('should return appropriate date ranges for 1W timeframe', () => {
-      const { from, to } = getTimeframeDateRange('1W');
+    it('should return appropriate date ranges for 1h timeframe', () => {
+      const { from, to } = getTimeframeDateRange('1h');
       
-      // 52 weeks back from 2023-03-30
-      expect(from).toMatch(/2022-\d{2}-\d{2}/);
-      expect(to).toBe('2023-03-30');
+      // ~12 days back from 2023-03-30
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      
+      expect(fromDate.getMonth()).toBe(toDate.getMonth());
+      expect(toDate.getDate() - fromDate.getDate()).toBeLessThanOrEqual(12);
     });
 
-    it('should return appropriate date ranges for 1M timeframe', () => {
-      const { from, to } = getTimeframeDateRange('1M');
+    it('should return appropriate date ranges for 1m timeframe', () => {
+      const { from, to } = getTimeframeDateRange('1m');
       
-      // 12 months back from 2023-03-30
-      expect(from).toMatch(/2022-\d{2}-\d{2}/);
-      expect(to).toBe('2023-03-30');
+      // ~5 hours back from 2023-03-30
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      
+      expect(fromDate.getDate()).toBe(toDate.getDate());
+      const hourDiff = toDate.getHours() - fromDate.getHours();
+      expect(hourDiff >= 0 ? hourDiff : hourDiff + 24).toBeLessThanOrEqual(5);
     });
   });
 }); 

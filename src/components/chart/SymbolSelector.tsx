@@ -7,57 +7,57 @@ import { useState, useRef, useEffect } from 'react';
  * @interface SymbolSelectorProps
  */
 interface SymbolSelectorProps {
-  /** Current selected stock symbol */
+  /** Current selected cryptocurrency symbol */
   currentSymbol: string;
   /** Callback function when symbol changes */
   onSymbolChange: (symbol: string) => void;
 }
 
 /**
- * Interface for stock symbol data
+ * Interface for cryptocurrency symbol data
  * @interface SymbolData
  */
 interface SymbolData {
-  /** Stock ticker symbol */
+  /** Cryptocurrency ticker symbol */
   symbol: string;
-  /** Company name */
+  /** Cryptocurrency name */
   name: string;
 }
 
 /**
- * List of popular stock symbols commonly available on Polygon API
- * These stocks are part of major indices and should be available in both free and paid tiers
+ * List of popular cryptocurrency symbols available on Coinbase API
+ * These cryptocurrencies are the most commonly traded with good liquidity
  */
 const POPULAR_SYMBOLS: SymbolData[] = [
-  { symbol: 'AAPL', name: 'Apple Inc.' },
-  { symbol: 'MSFT', name: 'Microsoft Corporation' },
-  { symbol: 'GOOGL', name: 'Alphabet Inc. (Class A)' },
-  { symbol: 'GOOG', name: 'Alphabet Inc. (Class C)' },
-  { symbol: 'AMZN', name: 'Amazon.com Inc.' },
-  { symbol: 'META', name: 'Meta Platforms Inc.' },
-  { symbol: 'TSLA', name: 'Tesla, Inc.' },
-  { symbol: 'NVDA', name: 'NVIDIA Corporation' },
-  { symbol: 'JPM', name: 'JPMorgan Chase & Co.' },
-  { symbol: 'V', name: 'Visa Inc.' },
-  { symbol: 'WMT', name: 'Walmart Inc.' },
-  { symbol: 'JNJ', name: 'Johnson & Johnson' },
-  { symbol: 'PG', name: 'Procter & Gamble Co.' },
-  { symbol: 'MA', name: 'Mastercard Inc.' },
-  { symbol: 'UNH', name: 'UnitedHealth Group Inc.' },
-  { symbol: 'HD', name: 'Home Depot Inc.' },
-  { symbol: 'BAC', name: 'Bank of America Corp.' },
-  { symbol: 'KO', name: 'Coca-Cola Company' },
-  { symbol: 'DIS', name: 'Walt Disney Co.' },
-  { symbol: 'PFE', name: 'Pfizer Inc.' },
-  { symbol: 'NFLX', name: 'Netflix Inc.' },
-  { symbol: 'CSCO', name: 'Cisco Systems Inc.' },
-  { symbol: 'VZ', name: 'Verizon Communications Inc.' },
-  { symbol: 'ADBE', name: 'Adobe Inc.' },
-  { symbol: 'INTC', name: 'Intel Corporation' },
+  { symbol: 'BTC-USD', name: 'Bitcoin' },
+  { symbol: 'ETH-USD', name: 'Ethereum' },
+  { symbol: 'SOL-USD', name: 'Solana' },
+  { symbol: 'XRP-USD', name: 'XRP (Ripple)' },
+  { symbol: 'ADA-USD', name: 'Cardano' },
+  { symbol: 'DOGE-USD', name: 'Dogecoin' },
+  { symbol: 'DOT-USD', name: 'Polkadot' },
+  { symbol: 'AVAX-USD', name: 'Avalanche' },
+  { symbol: 'MATIC-USD', name: 'Polygon' },
+  { symbol: 'LINK-USD', name: 'Chainlink' },
+  { symbol: 'UNI-USD', name: 'Uniswap' },
+  { symbol: 'AAVE-USD', name: 'Aave' },
+  { symbol: 'ATOM-USD', name: 'Cosmos' },
+  { symbol: 'ALGO-USD', name: 'Algorand' },
+  { symbol: 'LTC-USD', name: 'Litecoin' },
+  { symbol: 'BCH-USD', name: 'Bitcoin Cash' },
+  { symbol: 'SHIB-USD', name: 'Shiba Inu' },
+  { symbol: 'FIL-USD', name: 'Filecoin' },
+  { symbol: 'NEAR-USD', name: 'NEAR Protocol' },
+  { symbol: 'APE-USD', name: 'ApeCoin' },
+  { symbol: 'MANA-USD', name: 'Decentraland' },
+  { symbol: 'SAND-USD', name: 'The Sandbox' },
+  { symbol: 'CRO-USD', name: 'Cronos' },
+  { symbol: 'XLM-USD', name: 'Stellar Lumens' },
+  { symbol: 'GRT-USD', name: 'The Graph' },
 ];
 
 /**
- * Symbol Selector component - allows users to search and select stock symbols
+ * Symbol Selector component - allows users to search and select cryptocurrency symbols
  * @component
  */
 export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
@@ -124,7 +124,7 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
           <div className="p-2">
             <input
               type="text"
-              placeholder="Search symbol..."
+              placeholder="Search cryptocurrency..."
               className="w-full px-3 py-2 bg-[#131722] border border-[#2A2E39] rounded text-white text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -148,7 +148,7 @@ export const SymbolSelector: React.FC<SymbolSelectorProps> = ({
             
             {filteredSymbols.length === 0 && (
               <div className="p-4 text-center text-gray-400 text-sm">
-                No symbols found matching &ldquo;{searchTerm}&rdquo;
+                No cryptocurrencies found matching &ldquo;{searchTerm}&rdquo;
               </div>
             )}
           </div>

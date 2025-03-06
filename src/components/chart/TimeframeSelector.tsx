@@ -5,16 +5,14 @@ interface TimeframeSelectorProps {
   onTimeframeChange: (timeframe: string) => void;
 }
 
-// Available timeframes
-// Weekly and Monthly timeframes removed to match header component
+// Valid Coinbase timeframes
 const TIMEFRAMES = [
   { value: '1m', label: '1m' },
   { value: '5m', label: '5m' },
   { value: '15m', label: '15m' },
-  { value: '30m', label: '30m' },
   { value: '1h', label: '1h' },
-  { value: '4h', label: '4h' },
-  { value: '1D', label: '1D' }
+  { value: '6h', label: '6h' },
+  { value: '1D', label: '1D' },
 ];
 
 export const TimeframeSelector: React.FC<TimeframeSelectorProps> = ({
@@ -40,4 +38,4 @@ export const TimeframeSelector: React.FC<TimeframeSelectorProps> = ({
   );
 };
 
-export default TimeframeSelector; 
+export default TimeframeSelector;

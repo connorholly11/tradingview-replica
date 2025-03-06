@@ -29,28 +29,51 @@ const SymbolInfo = ({
   
   // Format the symbol name for display
   useEffect(() => {
-    // Map common symbols to their full names
+    // Map common crypto symbols to their full names
     const symbolMap: Record<string, string> = {
-      'AAPL': 'Apple Inc.',
-      'MSFT': 'Microsoft Corp.',
-      'GOOGL': 'Alphabet Inc.',
-      'AMZN': 'Amazon.com Inc.',
-      'TSLA': 'Tesla Inc.',
-      'META': 'Meta Platforms Inc.',
-      'NVDA': 'NVIDIA Corp.',
       'BTC-USD': 'Bitcoin / USD',
       'ETH-USD': 'Ethereum / USD',
+      'SOL-USD': 'Solana / USD',
+      'XRP-USD': 'XRP (Ripple) / USD',
+      'ADA-USD': 'Cardano / USD',
+      'DOGE-USD': 'Dogecoin / USD',
+      'DOT-USD': 'Polkadot / USD',
+      'AVAX-USD': 'Avalanche / USD',
+      'MATIC-USD': 'Polygon / USD',
+      'LINK-USD': 'Chainlink / USD',
+      'UNI-USD': 'Uniswap / USD',
+      'AAVE-USD': 'Aave / USD',
+      'ATOM-USD': 'Cosmos / USD',
+      'ALGO-USD': 'Algorand / USD',
+      'LTC-USD': 'Litecoin / USD',
+      'BCH-USD': 'Bitcoin Cash / USD'
     };
     
-    setSymbolName(symbolMap[symbol] || symbol);
+    setSymbolName(symbolMap[symbol] || symbol.replace('-USD', '') + ' / USD');
   }, [symbol]);
   
   // Format numbers for display
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price);
+    // Format based on approximate value ranges for cryptocurrencies
+    if (price > 1000) {
+      // For BTC and other high-value cryptocurrencies
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(price);
+    } else if (price > 1) {
+      // For medium-valued cryptocurrencies
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4,
+      }).format(price);
+    } else {
+      // For low-valued cryptocurrencies
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 8,
+      }).format(price);
+    }
   };
   
   const formatLargeNumber = (num: number) => {

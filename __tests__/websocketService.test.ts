@@ -1,4 +1,4 @@
-import { WebSocketService } from '../src/lib/websocketService';
+import coinbaseWebSocketService from '../src/lib/coinbaseWebSocketService';
 
 // Define types for event handlers
 interface WebSocketEvent {
@@ -70,7 +70,7 @@ function simulateWebSocketClose(): void {
   }
 }
 
-describe('Polygon WebSocket Service', () => {
+describe('Coinbase WebSocket Service', () => {
   let mockMessageHandler: jest.Mock;
   let mockConnectHandler: jest.Mock;
   let mockDisconnectHandler: jest.Mock;
@@ -88,81 +88,67 @@ describe('Polygon WebSocket Service', () => {
     mockErrorHandler = jest.fn();
     
     // Set handlers
-    polygonWebSocketService.onMessage = mockMessageHandler;
-    polygonWebSocketService.onConnect = mockConnectHandler;
-    polygonWebSocketService.onDisconnect = mockDisconnectHandler;
-    polygonWebSocketService.onError = mockErrorHandler;
+    coinbaseWebSocketService.onMessage = mockMessageHandler;
+    coinbaseWebSocketService.onConnect = mockConnectHandler;
+    coinbaseWebSocketService.onDisconnect = mockDisconnectHandler;
+    coinbaseWebSocketService.onError = mockErrorHandler;
   });
 
   afterEach(() => {
     // Clean up
-    polygonWebSocketService.disconnect();
+    coinbaseWebSocketService.disconnect();
   });
 
   it('should successfully connect to WebSocket', () => {
     // Initialize the connection
-    polygonWebSocketService.init();
+    coinbaseWebSocketService.init();
     
     // Verify that connect handler was called
     expect(mockConnectHandler).toHaveBeenCalled();
   });
 
-  it('should handle authentication', () => {
-    // Initialize the connection
-    polygonWebSocketService.init();
-    
-    // Verify that authentication message was sent
-    expect(mockSend).toHaveBeenCalledWith(expect.stringContaining('auth'));
-    expect(mockSend).toHaveBeenCalledWith(expect.stringContaining('apiKey'));
-  });
-
   it('should subscribe to symbols', () => {
     // Initialize the connection
-    polygonWebSocketService.init();
+    coinbaseWebSocketService.init();
     
     // Reset mock to clear authentication calls
     mockSend.mockClear();
     
     // Subscribe to a symbol
-    polygonWebSocketService.connectToSymbol('AAPL');
+    coinbaseWebSocketService.connectToSymbol('BTC-USD');
     
     // Verify that subscription message was sent
     expect(mockSend).toHaveBeenCalledWith(expect.stringContaining('subscribe'));
-    expect(mockSend).toHaveBeenCalledWith(expect.stringContaining('AAPL'));
+    expect(mockSend).toHaveBeenCalledWith(expect.stringContaining('BTC-USD'));
   });
 
   it('should process valid price update messages', () => {
     // Initialize the connection
-    polygonWebSocketService.init();
+    coinbaseWebSocketService.init();
     
     // Simulate receiving a valid message
     const validMessage = {
-      ev: 'AM', // Aggregate Minute
-      sym: 'AAPL',
-      v: 10000, // Volume
-      o: 150.1, // Open
-      c: 151.2, // Close
-      h: 152.3, // High
-      l: 149.8, // Low
-      t: 1622548800000, // Timestamp
+      type: 'ticker',
+      product_id: 'BTC-USD',
+      price: '42500.75',
+      time: '2023-03-30T12:34:56.789Z',
+      side: 'buy',
+      sequence: 12345678,
+      t: 1648635296789 // Unix timestamp
     };
     
     simulateWebSocketMessage(validMessage);
     
     // Verify message handler was called with transformed data
-    expect(mockMessageHandler).toHaveBeenCalledWith({
-      t: validMessage.t,
-      o: validMessage.o,
-      h: validMessage.h,
-      l: validMessage.l,
-      c: validMessage.c,
-      v: validMessage.v
-    });
+    expect(mockMessageHandler).toHaveBeenCalledWith(expect.objectContaining({
+      price: 42500.75,
+      t: validMessage.t
+    }));
   });
 
   it('should handle invalid messages gracefully', () => {
     // Initialize the connection
-    polygonWebSocketService.init();
+    coinbaseWebSocketService.init();
     
     // Simulate receiving an invalid message
     const invalidMessage = { status: 'error', message: 'Invalid request' };
@@ -174,7 +160,7 @@ describe('Polygon WebSocket Service', () => {
 
   it('should handle connection errors', () => {
     // Initialize the connection
-    polygonWebSocketService.init();
+    coinbaseWebSocketService.init();
     
     // Simulate an error
     simulateWebSocketError();
@@ -185,7 +171,7 @@ describe('Polygon WebSocket Service', () => {
 
   it('should handle disconnection', () => {
     // Initialize the connection
-    polygonWebSocketService.init();
+    coinbaseWebSocketService.init();
     
     // Simulate WebSocket close
     simulateWebSocketClose();

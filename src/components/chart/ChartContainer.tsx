@@ -25,7 +25,7 @@ interface ChartContainerProps {
   symbol?: string;
   interval?: string;
   chartType?: 'candle' | 'bar' | 'line';
-  dataProvider?: 'polygon' | 'coinbase'; // optional
+  dataProvider?: 'coinbase'; // only coinbase supported
 }
 
 const logChart = (action: string, details?: Record<string, unknown>) => {
@@ -38,7 +38,7 @@ const ChartContainer = forwardRef<
   ChartContainerProps
 >(function ChartContainerComponent(
   {
-    symbol = 'AAPL',
+    symbol = 'BTC-USD',
     interval = '1D',
     chartType = 'candle',
     dataProvider = 'coinbase'
@@ -114,7 +114,7 @@ const ChartContainer = forwardRef<
 
     (async () => {
       try {
-        const result = await fetchAggregatesUnified(currentSymbol, currentInterval, dataProvider);
+        const result = await fetchAggregatesUnified(currentSymbol, currentInterval);
         if (!isMountedRef.current) return;
 
         setChartData(result.data);
@@ -133,7 +133,7 @@ const ChartContainer = forwardRef<
         }
       }
     })();
-  }, [currentSymbol, currentInterval, dataProvider]);
+  }, [currentSymbol, currentInterval]);
 
   useEffect(() => {
     if (realtimeError) {
